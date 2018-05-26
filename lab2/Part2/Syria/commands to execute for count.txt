@@ -1,0 +1,31 @@
+start-hadoop.sh
+
+#Enable runtime permissions for py files
+
+chmod +x mapper.py
+chmod +x reducer.py
+
+
+#Commands for word count in news articles
+
+hdfs dfs -put $HOME/Desktop/SyriaNewsData input
+
+hadoop jar $HADOOP_HOME/share/hadoop/tools/lib/hadoop-streaming-2.6.4.jar -files mapper.py,reducer.py -mapper 'python3 mapper.py' -reducer 'python3 reducer.py' -input input -output SyriaNewsWords
+
+hdfs dfs -get SyriaNewsWords /home/hadoop/Desktop/SyriaNewsWords
+
+hdfs dfs -rm -r input
+
+
+
+#Commands for word count in tweets
+
+hdfs dfs -put $HOME/Desktop/SyriaTwitterData input
+
+hadoop jar $HADOOP_HOME/share/hadoop/tools/lib/hadoop-streaming-2.6.4.jar -files mapper.py,reducer.py -mapper 'python3 mapper.py' -reducer 'python3 reducer.py' -input input -output SyriaTwitterWords
+
+hdfs dfs -get SyriaTwitterWords /home/hadoop/Desktop/SyriaTwitterWords
+
+hdfs dfs -rm -r input
+
+stop-hadoop.sh

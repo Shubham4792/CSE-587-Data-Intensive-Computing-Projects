@@ -1,0 +1,33 @@
+start-hadoop.sh
+
+#Enable runtime permissions for py files
+
+chmod +x mappercoocc.py
+chmod +x reducercoocc.py
+
+
+#Commands for word co-occurrences in tweets
+
+hdfs dfs -put $HOME/Desktop/TwitterDataCoocc input
+
+hadoop jar $HADOOP_HOME/share/hadoop/tools/lib/hadoop-streaming-2.6.4.jar -files mappercoocc.py,reducercoocc.py,topwordstweets.txt -mapper 'python3 mappercoocc.py topwordstweets.txt' -reducer 'python3 reducercoocc.py' -input input -output TwitterWordsCoocc
+
+hdfs dfs -get TwitterWordsCoocc /home/hadoop/Desktop/TwitterWordsCoocc
+
+hdfs dfs -rm -r input
+
+
+
+
+#Commands for word co-occurrences in news articles
+
+hdfs dfs -put $HOME/Desktop/NewsDataCoocc input
+
+hadoop jar $HADOOP_HOME/share/hadoop/tools/lib/hadoop-streaming-2.6.4.jar -files mappercoocc.py,reducercoocc.py,topwordsnews.txt -mapper 'python3 mappercoocc.py topwordsnews.txt' -reducer 'python3 reducercoocc.py' -input input -output NewsWordsCoocc
+
+hdfs dfs -get NewsWordsCoocc /home/hadoop/Desktop/NewsWordsCoocc
+
+hdfs dfs -rm -r input
+
+
+stop-hadoop.sh

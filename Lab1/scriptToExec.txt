@@ -1,0 +1,56 @@
+key<-"AIzaSyAo6Cg04SonBTSD-Le5SvuzQIToXK6kZyA"
+library(googleway)
+library(stringr)
+mydata<-read.csv(file = "C:\\Users\\spandey4\\Desktop\\users.csv")
+nrow(mydata)
+locations<- mydata$location
+pattern<-"([^a-zA-Z0-9 ,./])"
+check<- str_subset(locations,pattern)
+locations <- locations [! locations %in% check]
+pattern<-"([a-zA-Z]*www.[a-zA-Z]*)"
+check<- str_subset(locations,pattern)
+locations <- locations [! locations %in% check]
+length(locations)
+locations<- as.character(locations)
+temp_loc<- head(locations,10000)
+temp_loc<-temp_loc[temp_loc!='']
+length(temp_loc)
+i= 10001
+while(i<=70000){
+    j = i+ 9999
+    temp_loc2<-locations[i:j]
+    temp_loc2<-temp_loc2[temp_loc2!='']
+    length(temp_loc2)
+    temp_loc<-append(temp_loc,temp_loc2)
+    length(temp_loc)
+    i=i+10000
+}
+length(temp_loc)
+
+k<-read.csv(file = "C:\\Users\\spandey4\\Desktop\\states.csv")
+k$X.1<-NULL
+countDone<-nrow(k) + 1
+countLimit<-countDone+2600
+for(i in countDone:countLimit){
+    j = i+ 15001
+    address<- google_geocode(address = temp_loc[j], key = key, simplify= TRUE)
+	if(address$status == "OVER_QUERY_LIMIT"){
+		print(i)
+		print("limit exceeded")
+		break
+	}
+	if(address$status != "ZERO_RESULTS"){
+		rev<- address$results$address_components[[1]][3,1]
+		y <- geocode_coordinates(address)
+		print(rev)
+   		 k[i,1]<-k[i-1,1]+1
+   		 k[i,2]<-y[[1,1]] 
+		 k[i,3]<-y[[1,2]]
+    		 k[i,4]<- rev
+		 print(i)
+	}
+	if(address$status == "ZERO_RESULTS"){
+		print("no result")
+	}
+}
+write.csv(k,"C:\\Users\\spandey4\\Desktop\\states.csv")

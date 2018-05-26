@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html>
+<script src="http://d3js.org/d3.v3.min.js"></script>
+<script src="d3.layout.cloud.js"></script>
+<head>
+    <title>Cambridge Analytica Word Cloud</title>
+</head>
+<style>
+    body {
+        font-family:"Lucida Grande","Droid Sans",Arial,Helvetica,sans-serif;
+    }
+    .legend {
+		display:block;
+        width:600px; 
+		margin:40px auto;
+		text-align: center;
+		font-weight: bold;
+    }
+	#words{
+		float:left;
+		width:200px;
+		margin-top:40px;
+		margin-left:60px;
+	}
+	#word-cloud{
+		float:left;
+		width:800px;
+		margin-left:160px;
+		margin-top:40px;
+	}
+	.dropbtn {
+    background-color: #4CAF50;
+    color: white;
+    padding: 16px;
+    font-size: 16px;
+    border: none;
+    cursor: pointer;
+}
+
+.dropbtn:hover, .dropbtn:focus {
+    background-color: #3e8e41;
+}
+
+#myInput {
+    border-box: box-sizing;
+    background-image: url('searchicon.png');
+    background-position: 14px 12px;
+    background-repeat: no-repeat;
+    font-size: 16px;
+    padding: 14px 20px 12px 45px;
+    border: none;
+    border-bottom: 1px solid #ddd;
+}
+
+#myInput:focus {outline: 3px solid #ddd;}
+
+.dropdown {
+	float:left;
+	margin-top:40px;
+    position: relative;
+    display: inline-block;
+}
+
+.dropdown-content {
+    display: none;
+    position: absolute;
+    background-color: #f6f6f6;
+    min-width: 200px;
+    overflow: auto;
+    border: 1px solid #ddd;
+    z-index: 1;
+}
+
+.dropdown-content a {
+    color: black;
+    padding: 12px 16px;
+    text-decoration: none;
+    display: block;
+}
+
+.dropdown a:hover {background-color: #ddd}
+
+.show {display:block;}
+
+.mvright{
+	margin-left:40px;
+}
+	
+</style>
+<body>
+
+<div class = "legend">Commonly used words are larger. Less common words are smaller.</div>
+<div id = "container">
+<div class="dropdown mvright">
+<button onclick="myFunction()" class="dropbtn">Dropdown</button>
+  <div id="myDropdown" class="dropdown-content">
+    <input type="text" placeholder="Search.." id="myInput" onkeyup="filterFunction()">
+    <a href="#" onclick="disp('1')">Cambridge Analytica WordCloud for Twitter</a>
+    <a href="#" onclick="disp('2')">Cambridge Analytica WordCloud for News</a>
+    <a href="#" onclick="disp('3')">Gun Violence WordCloud for Twitter</a>
+    <a href="#" onclick="disp('4')">Gun Violence WordCloud for News</a>
+    <a href="#" onclick="disp('5')">Syria WordCloud for Twitter</a>
+    <a href="#" onclick="disp('6')">Syria WordCloud for News</a>
+	<a href="#" onclick="disp('7')">Cambridge Analytica Co-occurrence WordCloud for Twitter</a>
+    <a href="#" onclick="disp('8')">Cambridge Analytica Co-occurrence WordCloud for News</a>
+    <a href="#" onclick="disp('9')">Gun Violence Co-occurrence WordCloud for Twitter</a>
+    <a href="#" onclick="disp('10')">Gun Violence Co-occurrence WordCloud for News</a>
+    <a href="#" onclick="disp('11')">Syria Co-occurrence WordCloud for Twitter</a>
+    <a href="#" onclick="disp('12')">Syria Co-occurrence WordCloud for News</a>
+  </div>
+</div>
+<div id= "word-cloud"></div>
+<div id= "words"></div>
+</div>
+<script>
+/* When the user clicks on the button, 
+toggle between hiding and showing the dropdown content */
+function myFunction() {
+    document.getElementById("myDropdown").classList.toggle("show");
+}
+
+function filterFunction() {
+    var input, filter, ul, li, a, i;
+    input = document.getElementById("myInput");
+    filter = input.value.toUpperCase();
+    div = document.getElementById("myDropdown");
+    a = div.getElementsByTagName("a");
+    for (i = 0; i < a.length; i++) {
+        if (a[i].innerHTML.toUpperCase().indexOf(filter) > -1) {
+            a[i].style.display = "";
+        } else {
+            a[i].style.display = "none";
+        }
+	}
+}
+
+var filename = '';
+disp('1');
+function disp(id) {
+	 if(id == '1'){
+		create("./fbtweets.txt",id);
+	 }else if(id =='2'){
+		create("./fbnews.txt",id);
+	 }else if(id =='3'){
+		create("./gunstweets.txt",id);
+	 }else if(id =='4'){
+		create("./gunsnews.txt",id);
+	 }else if(id =='5'){
+		create("./syriatweets.txt",id);
+	 }else if(id =='6'){
+		create("./syrianews.txt",id);
+	 }else if(id =='7'){
+		create("./fbtweetscoocc.txt",id);
+	 }else if(id =='8'){
+		create("./fbnewscoocc.txt",id);
+	 }else if(id =='9'){
+		create("./gunstweetscoocc.txt",id);
+	 }else if(id =='10'){
+		create("./gunsnewscoocc.txt",id);
+	 }else if(id =='11'){
+		create("./syriatweetscoocc.txt",id);
+	 }else{
+		create("./syrianewscoocc.txt",id);
+	 }
+}
+
+
+var layout = d3.layout.cloud()
+    .size([800, 500])
+    .padding(5)
+    .rotate(function() { return ~~(Math.random() * 2) * 90; })
+    .font("Impact")
+    .fontSize(function(d) {
+	if(d.size < 10) {return 10;}
+	else if(d.size < 100) {return 20;}
+	else if(d.size < 500) {return 30;}
+		return 60; })
+    .on("end", draw);
+	
+var fill = d3.scale.category20();	
+
+
+function create(filename,id){
+	d3.text(filename, function(data){
+	var dataf = d3.csv.parseRows(data);
+	var x = data.split("\n");
+	var arr = [];
+	for (var i = 0; i < x.length; i++) {
+		arr.push({
+			text: x[i].split("\t")[0],
+			size: parseInt(x[i].split("\t")[1])
+		});
+	}
+	var leaders = arr.map(function(d){return {text: d.text, size : +d.size}; })
+							 .sort(function(a,b){return d3.descending(a.size,b.size); });
+	leaders = leaders.sort(function(a,b){return d3.descending(a.size,b.size); });
+	for(i=0;i<10;i++){
+	console.log(leaders[i]["text"]);
+		if(leaders[i]["text"] == ''){
+			leaders = arr.map(function(d){return {text: d.text, size : +d.size};});
+			leaders = leaders.sort(function(a,b){return d3.descending(a.size,b.size); });
+			break;
+		}
+	}
+	if(id == '4'||id >= parseInt('6')){
+			layout.fontSize(function(d) {
+			if(d.size < 10) {return 10;}
+			else if(d.size < 50) {return 20;}
+			else if(d.size < 100) {return 30;}
+			return 60; });
+	} else{
+		layout.fontSize(function(d) {
+			if(d.size < 50) {return 10;}
+			else if(d.size < 500) {return 20;}
+			else if(d.size < 1000) {return 30;}
+			return 60; });
+	}
+	temp = "<b>The top ten words are :-</b><br><br>";
+	for (i = 0; i < 10; i++) { 
+		temp += leaders[i]["text"]+ " " + leaders[i]["size"] + "<br>";
+	}
+	d3.select("#words").html(temp);
+	var displaywords = [];
+	for (var i = 0; i < 500; i++) {
+		displaywords.push(leaders[i]);
+	}
+	layout.words(displaywords);
+	layout.start();
+	});
+}
+
+function draw(words) {
+  d3.select("#word-cloud").html("");
+  d3.select("#word-cloud").append("svg")
+      .attr("width", layout.size()[0])
+      .attr("height", layout.size()[1])
+      .append("g")
+      .attr("transform", "translate(" + layout.size()[0] / 2 + "," + layout.size()[1] / 2 + ")")
+      .selectAll("text")
+      .data(words)
+      .enter().append("text")
+      .style("font-size", function(d) { return d.size + "px"; })
+      .style("font-family", "Impact")
+      .style("fill", function(d, i) { return fill(i); })
+      .attr("text-anchor", "middle")
+      .attr("transform", function(d) {
+        return "translate(" + [d.x, d.y] + ")rotate(" + d.rotate + ")";
+      })
+      .text(function(d) { return d.text; });
+}
+
+</script>
+
+</body>
+
+</html>
